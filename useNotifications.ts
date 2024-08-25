@@ -8,12 +8,14 @@ export interface PushNotificationState {
   expoPushToken?: Notifications.ExpoPushToken;
 }
 
+export const NotificationControl = Notifications;
+
 export const useNotifications = () => {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldPlaySound: true,
+      shouldPlaySound: false,
       shouldShowAlert: true,
-      shouldSetBadge: true,
+      shouldSetBadge: false,
     }),
   });
 
@@ -51,7 +53,7 @@ export const useNotifications = () => {
         return;
       }
       token = await Notifications.getExpoPushTokenAsync({
-        projectId: "0d22ae9e-0ea0-4bfd-be36-99fc0d8e4caa",
+        projectId: "9a501ccb-6c02-4607-92ed-09aa1812e06c",
       });
     } else {
       console.log("Error: please use a physical device");

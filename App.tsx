@@ -3,25 +3,20 @@ import { StyleSheet, Text, View, Button } from "react-native";
 import * as BackgroundFetch from "expo-background-fetch";
 import * as TaskManager from "expo-task-manager";
 import { useNotifications } from "./useNotifications";
+import { sendNotification } from "./helper";
 
 const BACKGROUND_FETCH_TASK = "background-fetch";
-
-// 1. Define the task by providing a name and the function that should be executed
-// Note: This needs to be called in the global scope (e.g outside of your React components)
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   const now = Date.now();
 
   console.log(
     `Got background fetch call at date: ${new Date(now).toISOString()}`
   );
-
+  //function to run in background
+  await sendNotification();
   // Be sure to return the successful result type!
   return BackgroundFetch.BackgroundFetchResult.NewData;
 });
-
-// 2. Register the task at some point in your app by providing the same name,
-// and some configuration options for how the background fetch should behave
-// Note: This does NOT need to be in the global scope and CAN be used in your React components!
 async function registerBackgroundFetchAsync() {
   return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
     minimumInterval: 60 * 15, // 15 minutes
@@ -30,20 +25,13 @@ async function registerBackgroundFetchAsync() {
   });
 }
 
-// 3. (Optional) Unregister tasks by specifying the task name
-// This will cancel any future background fetch calls that match the given name
-// Note: This does NOT need to be in the global scope and CAN be used in your React components!
-async function unregisterBackgroundFetchAsync() {
-  return BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
-}
-
 export default function App() {
   const [isRegistered, setIsRegistered] = React.useState(false);
   const [status, setStatus] = React.useState<any>(null);
   const { expoPushToken } = useNotifications();
 
   React.useEffect(() => {
-    checkStatusAsync();
+    registerBackgroundFetchAsync();
   }, []);
 
   const checkStatusAsync = async () => {
@@ -53,16 +41,6 @@ export default function App() {
     );
     setStatus(status);
     setIsRegistered(isRegistered);
-  };
-
-  const toggleFetchTask = async () => {
-    if (isRegistered) {
-      await unregisterBackgroundFetchAsync();
-    } else {
-      await registerBackgroundFetchAsync();
-    }
-
-    checkStatusAsync();
   };
 
   useEffect(() => {
@@ -75,13 +53,13 @@ export default function App() {
     <View style={styles.screen}>
       <View style={styles.textContainer}>
         <Text>
-          Background fetch status:{" "}
+          Background action status:{" "}
           <Text style={styles.boldText}>
             {status && BackgroundFetch.BackgroundFetchStatus[status]}
           </Text>
         </Text>
         <Text>
-          Background fetch task name:{" "}
+          Background action task name:{" "}
           <Text style={styles.boldText}>
             {isRegistered ? BACKGROUND_FETCH_TASK : "Not registered yet!"}
           </Text>
@@ -89,12 +67,12 @@ export default function App() {
       </View>
       <View style={styles.textContainer}></View>
       <Button
-        title={
-          isRegistered
-            ? "Unregister BackgroundFetch task"
-            : "Register BackgroundFetch task"
-        }
-        onPress={toggleFetchTask}
+        title={"Check background action is registered"}
+        onPress={checkStatusAsync}
+      />
+      <Button
+        title={"Send Push Notification"}
+        onPress={async () => sendNotification()}
       />
     </View>
   );
